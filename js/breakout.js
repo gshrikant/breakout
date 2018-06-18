@@ -9,9 +9,11 @@ var rightPressed = false;
 var leftPressed = false;
 var lost = false;
 var won = false;
+var lives = 3;
 
 // Game attributes
-const REFRESH = 10;
+const RIGHT_ARROW = 39;
+const LEFT_ARROW = 37;
 var score = 0;
 
 // Ball attributes
@@ -36,6 +38,14 @@ const PADDLE_HEIGHT = 10, PADDLE_WIDTH = 75;
 var px = canvas.width/3;
 var py = canvas.height - PADDLE_HEIGHT;
 
+function reset()
+{
+    x = canvas.width/2;
+    y = canvas.height - 30;
+    dx = 2, dy = -2;
+    px = canvas.width/3;
+}
+
 function createBricks()
 {
     for (var c = 0; c < BRICK_COLUMNS; ++c) {
@@ -48,7 +58,7 @@ function createBricks()
 
 function checkCollisions()
 {
-    // Loop over bricks to see if ball touched any of them.
+    // Loop over all bricks to see if ball touched any of them.
     for (var c = 0; c < BRICK_COLUMNS; ++c) {
         for (var r = 0; r < BRICK_ROWS; ++r) {
             var b = bricks[c][r];
@@ -61,7 +71,7 @@ function checkCollisions()
                         dy = -dy;
                         score += b.value;
                         ++bricksDown;
-                        if (bricksDown == BRICKS_ROWS*BRICKS_COLUMNS) {
+                        if (bricksDown == BRICK_ROWS*BRICK_COLUMNS) {
                             won = true;
                         }
                     }
@@ -100,6 +110,13 @@ function drawScore()
     ctx.font = "16px Arial";
     ctx.fillStyle = "#0095DD";
     ctx.fillText("Score: " + score, 8, 20);
+}
+
+function drawLives()
+{
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
 }
 
 function drawPaddle()
@@ -144,16 +161,10 @@ function victory()
 
 function draw()
 {
+    // Clear the canvas.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (lost) {
-        gameOver();
-        clearInterval(rid);
-    } else if (won) {
-        victory();
-        clearInterval(rid);
-    }
-
+    drawLives();
     drawBall();
     drawPaddle();
     drawBricks();
@@ -169,7 +180,11 @@ function draw()
             // the paddle.
             dy = -dy;
         } else {
-            lost = true;
+            lives--;
+            lost = !lives;
+            if (!lost) {
+                reset();
+            }
         }
     }
 
@@ -189,6 +204,15 @@ function draw()
     } else if (leftPressed && px > 0) {
         px -= 7;
     }
+
+    if (lost) {
+        gameOver();
+    } else if (won) {
+        victory();
+    } else {
+        requestAnimationFrame(draw);
+    }
+
 }
 
 function mouseMoveHandler(e)
@@ -201,18 +225,18 @@ function mouseMoveHandler(e)
 
 function keyupHandler(key)
 {
-    if (key.keyCode == 39) {
+    if (key.keyCode == RIGHT_ARROW) {
         rightPressed = false;
-    } else if (key.keyCode == 37) {
+    } else if (key.keyCode == LEFT_ARROW) {
         leftPressed = false;
     }
 }
 
 function keydownHandler(key)
 {
-    if (key.keyCode == 39) {
+    if (key.keyCode == RIGHT_ARROW) {
         rightPressed = true;
-    } else if (key.keyCode == 37) {
+    } else if (key.keyCode == LEFT_ARROW) {
         leftPressed = true;
     }
 }
@@ -221,4 +245,4 @@ createBricks();
 document.addEventListener("keydown", keydownHandler, false);
 document.addEventListener("keyup", keyupHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
-var rid = setInterval(draw, REFRESH);
+draw();

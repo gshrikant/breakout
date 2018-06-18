@@ -1,0 +1,27 @@
+html, body {
+    height: 100%;
+    background-color: #fee9d9;
+}
+
+h1 {
+    text-align: center;
+    font-family: Segoe UI, Helvetica, Ubuntu, sans-serif;
+}
+
+#title {
+    color: white;
+    background-color: #ff671b;
+}
+
+#wrapper {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game {
+    display: block;
+    background: #eeeeee;
+}

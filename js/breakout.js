@@ -1,27 +1,111 @@
 // breakout.js
 // Atari's Breakout with HTML5 Canvas and Javascript
-// Shrikant Giridhar
 
 'use strict';
 
 var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
-
-var x = canvas.width/2;
-var y = canvas.height - 30;
-var paddleHeight = 10, paddleWidth = 75;
-
-// Refresh period (s)
-const REFRESH = 10;
+var rightPressed = false;
+var leftPressed = false;
+var lost = false;
+var won = false;
 
 // Game attributes
+const REFRESH = 10;
+var score = 0;
+
+// Ball attributes
 const BALL_RADIUS = 10;
-var dx = 2, dy = 2;
+var x = canvas.width/2;
+var y = canvas.height - 30;
+var dx = 2, dy = -2;
+
+// Brick attributes
+const BRICK_ROWS = 3;
+const BRICK_COLUMNS = 10;
+const BRICK_WIDTH = 75;
+const BRICK_HEIGHT = 20;
+const BRICK_PADDING = 2;
+const BRICK_OFFSET_TOP = 30;
+const BRICK_OFFSET_LEFT = 15;
+var bricks = [];
+var bricksDown = 0;
+
+// Paddle attributes
+const PADDLE_HEIGHT = 10, PADDLE_WIDTH = 75;
+var px = canvas.width/3;
+var py = canvas.height - PADDLE_HEIGHT;
+
+function createBricks()
+{
+    for (var c = 0; c < BRICK_COLUMNS; ++c) {
+        bricks[c] = [];
+        for (var r = 0; r < BRICK_ROWS; ++r) {
+            bricks[c][r] = { x: 0, y: 0, value: 0, status: true };
+        }
+    }
+}
+
+function checkCollisions()
+{
+    // Loop over bricks to see if ball touched any of them.
+    for (var c = 0; c < BRICK_COLUMNS; ++c) {
+        for (var r = 0; r < BRICK_ROWS; ++r) {
+            var b = bricks[c][r];
+
+            // Only collide with existing bricks.
+            if (b.status) {
+                if (x > b.x && x < b.x + BRICK_WIDTH) {
+                    if (y > b.y && y < b.y + BRICK_HEIGHT) {
+                        b.status = false;
+                        dy = -dy;
+                        score += b.value;
+                        ++bricksDown;
+                        if (bricksDown == BRICKS_ROWS*BRICKS_COLUMNS) {
+                            won = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function drawBricks()
+{
+    for (var c = 0; c < BRICK_COLUMNS; ++c) {
+        for (var r = 0; r < BRICK_ROWS; ++r) {
+            // Draw live bricks.
+            if (bricks[c][r].status) {
+                // Compute brick position.
+                var bx = c*(BRICK_WIDTH + BRICK_PADDING) + BRICK_OFFSET_LEFT;
+                var by = r*(BRICK_HEIGHT + BRICK_PADDING) + BRICK_OFFSET_TOP;
+
+                bricks[c][r].x = bx;
+                bricks[c][r].y = by;
+                bricks[c][r].value = 2;
+
+                ctx.beginPath();
+                ctx.rect(bx, by, BRICK_WIDTH, BRICK_HEIGHT);
+                ctx.fillStyle = "#c96457";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    }
+}
+
+function drawScore()
+{
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("Score: " + score, 8, 20);
+}
 
 function drawPaddle()
 {
     ctx.beginPath();
-    ctx.rect(canvas.width/2, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+    ctx.rect(px, py, PADDLE_WIDTH, PADDLE_HEIGHT);
     ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
     ctx.fill();
     ctx.closePath();
@@ -40,23 +124,101 @@ function drawBall()
     ctx.closePath();
 }
 
+function gameOver()
+{
+    var msgx = canvas.height/2;
+    var msgy = canvas.width/2;
+
+    ctx.font = "30px Arial";
+    ctx.fillText("GAME OVER!", msgx, msgy);
+}
+
+function victory()
+{
+    var msgx = canvas.height/2;
+    var msgy = canvas.width/2;
+
+    ctx.font = "30px Arial";
+    ctx.fillText("Congratulations! You win!", msgx, msgy);
+}
+
 function draw()
 {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (lost) {
+        gameOver();
+        clearInterval(rid);
+    } else if (won) {
+        victory();
+        clearInterval(rid);
+    }
+
     drawBall();
     drawPaddle();
+    drawBricks();
+    drawScore();
 
     // Detect wall collisions.
-    if (y > canvas.height - BALL_RADIUS || y < BALL_RADIUS) {
+    if (y < BALL_RADIUS) {
         dy = -dy;
+    } else if (y > canvas.height - BALL_RADIUS - PADDLE_HEIGHT) {
+        // Include radius to allow ball to bounce off of corners.
+        if (x > px - BALL_RADIUS && x < px + PADDLE_WIDTH + BALL_RADIUS) {
+            // Advanced mode: speed up a little each time we hit
+            // the paddle.
+            dy = -dy;
+        } else {
+            lost = true;
+        }
     }
 
     if (x > canvas.width - BALL_RADIUS || x < BALL_RADIUS) {
         dx = -dx;
     }
 
+    checkCollisions();
+
+    // Move the ball.
     x += dx;
     y += dy;
+
+    // Move the paddle.
+    if (rightPressed && px < canvas.width - PADDLE_WIDTH) {
+        px += 7;
+    } else if (leftPressed && px > 0) {
+        px -= 7;
+    }
 }
 
-setInterval(draw, REFRESH);
+function mouseMoveHandler(e)
+{
+    var relx = e.clientX - canvas.offsetLeft;
+    if (relx > 0 && relx < canvas.width) {
+        px = relx - PADDLE_WIDTH/2;
+    }
+}
+
+function keyupHandler(key)
+{
+    if (key.keyCode == 39) {
+        rightPressed = false;
+    } else if (key.keyCode == 37) {
+        leftPressed = false;
+    }
+}
+
+function keydownHandler(key)
+{
+    if (key.keyCode == 39) {
+        rightPressed = true;
+    } else if (key.keyCode == 37) {
+        leftPressed = true;
+    }
+}
+
+createBricks();
+document.addEventListener("keydown", keydownHandler, false);
+document.addEventListener("keyup", keyupHandler, false);
+document.addEventListener("mousemove", mouseMoveHandler, false);
+var rid = setInterval(draw, REFRESH);

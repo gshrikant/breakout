@@ -7,15 +7,17 @@
     </head>
     <body>
         <h1 id="title">Breakout</h1>
-        <!-- Parent wrapper for flex align -->
         <p id="status"></p>
+        <!-- Parent wrapper for flex align -->
         <div id="wrapper">
             <canvas id="game" width="800" height="640"></canvas>
+            <img id="muteIcon" src="assets/mute.png" hidden="true"></img>
         </div>
         <audio id="music" autoplay preload="auto" loop>
             <source type="audio/mpeg" src="assets/levels.mp3"/>
             Your browser does not support playing audio.
         </audio>
         <script src="js/breakout.js"></script>
+        <script src="js/common.js"></script>
     </body>
 </html>

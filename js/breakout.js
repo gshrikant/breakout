@@ -15,13 +15,15 @@ var lives = 3;
 // Game attributes
 const RIGHT_ARROW = 39;
 const LEFT_ARROW = 37;
+const MAX_HITS = 2;
+
 var score = 0;
 
 // Ball attributes
 const BALL_RADIUS = 10;
-var x = canvas.width/2;
-var y = canvas.height - 30;
 var dx = 2, dy = -2;
+var bricks = [];
+var bricksDown = 0;
 
 // Brick attributes
 const BRICK_ROWS = 3;
@@ -31,24 +33,22 @@ const BRICK_HEIGHT = 20;
 const BRICK_PADDING = 2;
 const BRICK_OFFSET_TOP = 30;
 const BRICK_OFFSET_LEFT = 15;
-var bricks = [];
-var bricksDown = 0;
 
 // Paddle attributes
 const PADDLE_HEIGHT = 10, PADDLE_WIDTH = 75;
-var px = canvas.width/3;
+var px = Math.random()*(canvas.width - PADDLE_WIDTH);
 var py = canvas.height - PADDLE_HEIGHT;
+var x = px + PADDLE_WIDTH/2;
+var y = canvas.height - 30;
 
-function reset()
-{
+function reset() {
     x = canvas.width/2;
     y = canvas.height - 30;
     dx = 2, dy = -2;
     px = canvas.width/3;
 }
 
-function createBricks()
-{
+function createBricks() {
     for (var c = 0; c < BRICK_COLUMNS; ++c) {
         bricks[c] = [];
         for (var r = 0; r < BRICK_ROWS; ++r) {
@@ -57,8 +57,7 @@ function createBricks()
     }
 }
 
-function checkCollisions()
-{
+function checkCollisions() {
     // Loop over all bricks to see if ball touched any of them.
     for (var c = 0; c < BRICK_COLUMNS; ++c) {
         for (var r = 0; r < BRICK_ROWS; ++r) {
@@ -68,10 +67,15 @@ function checkCollisions()
             if (b.status) {
                 if (x > b.x && x < b.x + BRICK_WIDTH) {
                     if (y > b.y && y < b.y + BRICK_HEIGHT) {
-                        b.status = false;
                         dy = -dy;
-                        score += b.value;
-                        ++bricksDown;
+                        score++;
+                        b.value--;
+
+                        if (!b.value) {
+                            b.status = false;
+                            ++bricksDown;
+                        }
+
                         if (bricksDown == BRICK_ROWS*BRICK_COLUMNS) {
                             won = true;
                         }
@@ -82,8 +86,8 @@ function checkCollisions()
     }
 }
 
-function drawBricks()
-{
+function drawBricks() {
+    const brickColor = [ "#c96457", "green", "yellow" ];
     for (var c = 0; c < BRICK_COLUMNS; ++c) {
         for (var r = 0; r < BRICK_ROWS; ++r) {
             // Draw live bricks.
@@ -91,46 +95,69 @@ function drawBricks()
                 // Compute brick position.
                 var bx = c*(BRICK_WIDTH + BRICK_PADDING) + BRICK_OFFSET_LEFT;
                 var by = r*(BRICK_HEIGHT + BRICK_PADDING) + BRICK_OFFSET_TOP;
+                if (!bricks[c][r].value) {
+                    var hits = 1 + Math.round(MAX_HITS*Math.random());
+                    bricks[c][r].value = hits;
+                }
 
                 bricks[c][r].x = bx;
                 bricks[c][r].y = by;
-                bricks[c][r].value = 2;
 
+                // Draw brick
                 ctx.beginPath();
                 ctx.rect(bx, by, BRICK_WIDTH, BRICK_HEIGHT);
-                ctx.fillStyle = "#c96457";
+                // ctx.fillStyle = "#c96457";
+                ctx.fillStyle = brickColor[bricks[c][r].value - 1];
                 ctx.fill();
+
+                // Draw borders
+                ctx.moveTo(bx, by);
+                ctx.lineTo(bx + BRICK_WIDTH, by);
+                ctx.lineTo(bx + BRICK_WIDTH, by + BRICK_HEIGHT);
+                ctx.lineTo(bx, by + BRICK_HEIGHT);
+                ctx.lineTo(bx, by);
+                ctx.strokeStyle = "black";
+                ctx.stroke();
+
                 ctx.closePath();
             }
         }
     }
 }
 
-function drawScore()
-{
+function drawScore() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#0095DD";
     ctx.fillText("Score: " + score, 8, 20);
 }
 
-function drawLives()
-{
+function drawLives() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#0095DD";
     ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
 }
 
-function drawPaddle()
-{
+function drawPaddle() {
     ctx.beginPath();
+
+    // Draw paddle
     ctx.rect(px, py, PADDLE_WIDTH, PADDLE_HEIGHT);
-    ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.fillStyle = "rgba(255, 255, 0)";
     ctx.fill();
+
+    // Draw borders
+    ctx.moveTo(px, py);
+    ctx.lineTo(px + PADDLE_WIDTH, py);
+    ctx.lineTo(px + PADDLE_WIDTH, py + PADDLE_HEIGHT);
+    ctx.lineTo(px, py + PADDLE_HEIGHT);
+    ctx.lineTo(px, py);
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+
     ctx.closePath();
 }
 
-function drawBall()
-{
+function drawBall() {
     const RADIUS = BALL_RADIUS,
           START_ANGLE = 0,
           END_ANGLE = Math.PI*2;
@@ -142,28 +169,15 @@ function drawBall()
     ctx.closePath();
 }
 
-function gameOver()
-{
-    var msgx = canvas.height/2;
-    var msgy = canvas.width/2;
-
-    ctx.font = "30px Arial";
-    ctx.fillText("GAME OVER!", msgx, msgy);
+function gameOver() {
     gameStatus.innerHTML = "Game Over!";
 }
 
-function victory()
-{
-    var msgx = canvas.height/2;
-    var msgy = canvas.width/2;
-
-    ctx.font = "30px Arial";
-    ctx.fillText("Congratulations! You win!", msgx, msgy);
+function victory() {
     gameStatus.innerHTML = "Congratulations!";
 }
 
-function draw()
-{
+function draw() {
     // Clear the canvas.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -181,7 +195,7 @@ function draw()
         if (x > px - BALL_RADIUS && x < px + PADDLE_WIDTH + BALL_RADIUS) {
             // Advanced mode: speed up a little each time we hit
             // the paddle.
-            dy = -dy;
+            dy = -1.05*dy;
         } else {
             lives--;
             lost = !lives;
@@ -218,16 +232,14 @@ function draw()
 
 }
 
-function mouseMoveHandler(e)
-{
+function mouseMoveHandler(e) {
     var relx = e.clientX - canvas.offsetLeft;
     if (relx > 0 && relx < canvas.width) {
         px = relx - PADDLE_WIDTH/2;
     }
 }
 
-function keyupHandler(key)
-{
+function keyupHandler(key) {
     if (key.keyCode == RIGHT_ARROW) {
         rightPressed = false;
     } else if (key.keyCode == LEFT_ARROW) {
@@ -235,8 +247,7 @@ function keyupHandler(key)
     }
 }
 
-function keydownHandler(key)
-{
+function keydownHandler(key) {
     if (key.keyCode == RIGHT_ARROW) {
         rightPressed = true;
     } else if (key.keyCode == LEFT_ARROW) {

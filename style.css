@@ -1,6 +1,6 @@
 html, body {
     height: 100%;
-    background-color: #fee9d9;
+    background-color: #ffffff;
 }
 
 h1 {
@@ -21,15 +21,21 @@ h1 {
     align-items: center;
 }
 
-#game {
-    display: block;
-    background: #eeeeee;
-}
-
 #status {
     font-family: Helvetica, sans-serif;
-    font-size: 20em;
+    font-size: 1em;
     font-weight: bold;
     color: red;
     text-align: center;
+}
+
+#game {
+    background: #eeeeee;
+    border: 0.5px solid black;
+    display: inline-block;
+}
+
+#muteIcon {
+    height: 40px;
+    width: 40px;
 }

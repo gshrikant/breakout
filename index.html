@@ -2,15 +2,17 @@
 <html>
     <head>
         <meta charset="utf-8"/>
-        <title>Breakout: Canvas</title>
+        <title>Breakout</title>
         <link rel="stylesheet" type="text/css" href="style.css">
     </head>
     <body>
-        <h1 id="title">BREAKOUT</h1>
+        <h1 id="title">Breakout</h1>
+        <!-- Parent wrapper for flex align -->
+        <p id="status"></p>
         <div id="wrapper">
             <canvas id="game" width="800" height="640"></canvas>
         </div>
-        <audio id="music" autoplay loop>
+        <audio id="music" autoplay preload="auto" loop>
             <source type="audio/mpeg" src="assets/levels.mp3"/>
             Your browser does not support playing audio.
         </audio>

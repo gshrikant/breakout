@@ -4,6 +4,7 @@
 'use strict';
 
 var canvas = document.getElementById("game");
+var gameStatus = document.getElementById("status");
 var ctx = canvas.getContext("2d");
 var rightPressed = false;
 var leftPressed = false;
@@ -148,6 +149,7 @@ function gameOver()
 
     ctx.font = "30px Arial";
     ctx.fillText("GAME OVER!", msgx, msgy);
+    gameStatus.innerHTML = "Game Over!";
 }
 
 function victory()
@@ -157,6 +159,7 @@ function victory()
 
     ctx.font = "30px Arial";
     ctx.fillText("Congratulations! You win!", msgx, msgy);
+    gameStatus.innerHTML = "Congratulations!";
 }
 
 function draw()

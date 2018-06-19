@@ -78,7 +78,7 @@ function checkCollisions() {
                             comboMode = true;
                         }
 
-                        score = comboMode ? MULTIPLIER*(score+1) : (score+1);
+                        score = comboMode ? (score + MULTIPLIER*2) : (score+1);
                         b.value--;
 
                         if (!b.value) {

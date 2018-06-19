@@ -17,9 +17,12 @@ const RIGHT_ARROW = 39;
 const LEFT_ARROW = 37;
 const MAX_HITS = 2;
 
+var comboMode = false;
+var consecutiveHits = 0;
 var score = 0;
 
 // Ball attributes
+const MULTIPLIER = 2;
 const BALL_RADIUS = 10;
 var dx = 2, dy = -2;
 var bricks = [];
@@ -68,7 +71,14 @@ function checkCollisions() {
                 if (x > b.x && x < b.x + BRICK_WIDTH) {
                     if (y > b.y && y < b.y + BRICK_HEIGHT) {
                         dy = -dy;
-                        score++;
+
+                        // Combo mode: 2x points!
+                        consecutiveHits++;
+                        if (consecutiveHits >= 2) {
+                            comboMode = true;
+                        }
+
+                        score = comboMode ? MULTIPLIER*(score+1) : (score+1);
                         b.value--;
 
                         if (!b.value) {
@@ -127,7 +137,7 @@ function drawBricks() {
 
 function drawScore() {
     ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = comboMode ? "#f00050": "#0095DD";
     ctx.fillText("Score: " + score, 8, 20);
 }
 
@@ -164,7 +174,8 @@ function drawBall() {
 
     ctx.beginPath();
     ctx.arc(x, y, RADIUS, START_ANGLE, END_ANGLE);
-    ctx.fillStyle = "#0095DD";
+    var color = comboMode ? "#f00500" : "#0095DD" ;
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.closePath();
 }
@@ -196,6 +207,8 @@ function draw() {
             // Advanced mode: speed up a little each time we hit
             // the paddle.
             dy = -1.05*dy;
+            comboMode = false;
+            consecutiveHits = 0;
         } else {
             lives--;
             lost = !lives;
